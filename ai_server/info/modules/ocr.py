@@ -3,7 +3,8 @@
 import cv2
 from mylogger import logger
 from fastapi import APIRouter, Request
-from info import limiter, text_image_orientation_model, text_det_model, text_rec_model, ocr_model
+from info import limiter, text_image_orientation_model, text_det_model, text_rec_model, ocr_model, layout_model, \
+    table_model
 from configs import API_LIMIT
 from .protocol import ErrorResponse, OCRGeneralRequest, OCRResultLine, OCRGeneralResponse, IdcardResponse, \
     ImageDirectionRequest, ImageDirectionResponse
@@ -125,3 +126,87 @@ def image_direction(request: Request,
             base64_str = cv2_to_base64(img)
 
     return JSONResponse(ImageDirectionResponse(angle=angle, correction_image=base64_str).dict())
+
+
+@router.api_route('/ai/ocr/test', methods=['GET'])
+@limiter.limit("6/minute")
+def ocr_server_test(request: Request):
+    image = cv2.imread('static/ocr.png')
+    table_image = cv2.imread('static/table.jpg')
+
+    msg = ''
+    try:
+        res = table_model(img=table_image)
+        logger.info(f"table: {res}")
+        msg += 'table model is OK!\n'
+    except Exception as e:
+        logger.error({'EXCEPTION': e})
+        msg += 'table model exception!!!\n'
+
+    try:
+        res = layout_model(img=image)
+        logger.info(f"layout: {res}")
+        msg += 'layout model is OK!\n'
+    except Exception as e:
+        logger.error({'EXCEPTION': e})
+        msg += 'layout model exception!!!\n'
+
+    try:
+        res = text_image_orientation_model.predict(image)
+        logger.info(f"image_orientation: {res}")
+        msg += 'image_orientation is OK!\n'
+    except Exception as e:
+        logger.error({'EXCEPTION': e})
+        msg += 'image_orientation exception!!!\n'
+
+    if text_det_model['server'] is not None:
+        try:
+            res = text_det_model['server'](image)
+            logger.info(f"det server: {res}")
+            msg += 'det server model is OK!\n'
+        except Exception as e:
+            logger.error({'EXCEPTION': e})
+            msg += 'det server model exception!!!\n'
+
+    if text_det_model['mobile'] is not None:
+        try:
+            res = text_det_model['mobile'](image)
+            logger.info(f"det mobile: {res}")
+            msg += 'det mobile model is OK!\n'
+        except Exception as e:
+            logger.error({'EXCEPTION': e})
+            msg += 'det mobile model exception!!!\n'
+
+    if text_rec_model['server'] is not None:
+        try:
+            res = text_rec_model['server']([image])
+            logger.info(f"rec server: {res}")
+            msg += 'rec server model is OK!\n'
+        except Exception as e:
+            logger.error({'EXCEPTION': e})
+            msg += 'rec server model exception!!!\n'
+
+    if text_rec_model['mobile'] is not None:
+        try:
+            res = text_rec_model['mobile']([image])
+            logger.info(f"rec mobile: {res}")
+            msg += 'rec mobile model is OK!\n'
+        except Exception as e:
+            logger.error({'EXCEPTION': e})
+            msg += 'rec mobile model exception!!!\n'
+
+    try:
+        _, res, _ = ocr_model(img=image,
+                              text_detector=text_det_model['server'] or text_det_model['mobile'],
+                              text_recognizer=text_rec_model['server'] or text_rec_model['mobile'],
+                              )
+        res = [x[0] for x in res]
+        text = '\n'.join(res)
+        logger.info(f"ocr: {text}")
+        msg += 'ocr model is OK!\n'
+        msg += text
+    except Exception as e:
+        logger.error({'EXCEPTION': e})
+        msg += 'ocr model exception!!!\n'
+
+    return msg
