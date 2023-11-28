@@ -58,7 +58,6 @@ class LayoutPredictor(object):
         img = np.expand_dims(img, axis=0)
         img = img.copy()
 
-        preds, elapse = 0, 1
         starttime = time.time()
 
         self.input_tensor.copy_from_cpu(img)
@@ -77,5 +76,6 @@ class LayoutPredictor(object):
         preds = dict(boxes=np_score_list, boxes_num=np_boxes_list)
 
         post_preds = self.postprocess_op(ori_im, img, preds)
+        res = [{'box': [int(x) for x in i['bbox'].tolist()], 'label': i['label']} for i in post_preds]
         elapse = time.time() - starttime
-        return post_preds, elapse
+        return res, elapse

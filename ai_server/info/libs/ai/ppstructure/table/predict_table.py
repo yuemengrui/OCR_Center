@@ -46,12 +46,12 @@ class TableSystem(object):
         self.predictor, self.input_tensor, self.output_tensors, self.config = utility.create_predictor(
             args, 'table', logger)
 
-    def __call__(self, img, ocr=False, text_detector=None, text_recognizer=None):
+    def __call__(self, img, ocr=False, text_detector=None, text_recognizer=None, **kwargs):
         result = dict()
         time_dict = {'det': 0, 'rec': 0, 'table': 0, 'all': 0, 'match': 0}
         start = time.time()
         structure_res, elapse = self._structure(copy.deepcopy(img))
-        result['cell_bbox'] = structure_res[1].tolist()
+        result['table_cells'] = [list(map(int, x)) for x in structure_res[1].tolist()]
         time_dict['table'] = elapse
 
         if ocr and text_detector and text_recognizer:
@@ -60,8 +60,8 @@ class TableSystem(object):
             time_dict['det'] = det_elapse
             time_dict['rec'] = rec_elapse
 
-            result['boxes'] = [x.tolist() for x in dt_boxes]
-            result['rec_res'] = rec_res
+            dt_boxes = [list(map(int, x.tolist())) for x in dt_boxes]
+            result['ocr'] = [{'box': dt_boxes[i], 'text': rec_res[i]} for i in range(len(rec_res))]
 
             tic = time.time()
             pred_html = self.match(structure_res, dt_boxes, rec_res)

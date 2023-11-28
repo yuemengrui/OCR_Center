@@ -4,7 +4,7 @@ import os
 
 FASTAPI_TITLE = 'OCR_Center'
 FASTAPI_HOST = '0.0.0.0'
-FASTAPI_PORT = 5000
+FASTAPI_PORT = 6000
 
 LOG_DIR = 'logs'
 os.makedirs(LOG_DIR, exist_ok=True)
@@ -18,5 +18,5 @@ REC_LOAD_MOBILE = True
 
 # API LIMIT
 API_LIMIT = {
-    "base": "120/minute"
+    "base": "240/minute"
 }

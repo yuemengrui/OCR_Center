@@ -24,7 +24,9 @@ from info.libs.ai.ppstructure.table.predict_table import TableSystem
 
 ####################### load model #######################
 text_image_orientation_model = ClsPredictor()
+logger.info('text_image_orientation_model load successful!')
 text_cls_model = TextClassifier(args=DotDict(CLS_CONFIGS), logger=logger)
+logger.info('text_cls_model load successful!')
 
 text_det_model = {
     'server': None,
@@ -36,10 +38,12 @@ if DET_LOAD_SERVER:
     det_server_configs = DET_CONFIGS['server']
     det_server_configs.update(DET_CONFIGS['global'])
     text_det_model['server'] = TextDetector(args=DotDict(det_server_configs), logger=logger)
+    logger.info('text det model server version load successful!')
 if DET_LOAD_MOBILE:
     det_mobile_configs = DET_CONFIGS['mobile']
     det_mobile_configs.update(DET_CONFIGS['global'])
     text_det_model['mobile'] = TextDetector(args=DotDict(det_mobile_configs), logger=logger)
+    logger.info('text det model mobile version load successful!')
 
 text_rec_model = {
     'server': None,
@@ -51,15 +55,19 @@ if REC_LOAD_SERVER:
     rec_server_configs = REC_CONFIGS['server']
     rec_server_configs.update(REC_CONFIGS['global'])
     text_rec_model['server'] = TextRecognizer(args=DotDict(rec_server_configs), logger=logger)
+    logger.info('text rec model server version load successful!')
 if REC_LOAD_MOBILE:
     rec_mobile_configs = REC_CONFIGS['mobile']
     rec_mobile_configs.update(REC_CONFIGS['global'])
     text_rec_model['mobile'] = TextRecognizer(args=DotDict(rec_mobile_configs), logger=logger)
+    logger.info('text rec model mobile version load successful!')
 
 ocr_model = TextSystem(text_classifier=text_cls_model, logger=logger)
 
 layout_model = LayoutPredictor(args=DotDict(LAYOUT_CONFIGS), logger=logger)
+logger.info('layout_model load successful!')
 table_model = TableSystem(args=DotDict(TABLE_CONFIGS), logger=logger)
+logger.info('table_model load successful!')
 
 ####################### load model #######################
 

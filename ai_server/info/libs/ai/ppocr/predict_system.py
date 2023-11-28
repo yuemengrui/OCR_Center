@@ -18,12 +18,12 @@ class TextSystem(object):
         self.logger = logger
         self.text_classifier = text_classifier
 
-    def __call__(self, img, text_detector, text_recognizer, cls=True, drop_score=0.5):
+    def __call__(self, img, text_detector, text_recognizer, cls=True, drop_score=0.5, **kwargs):
         time_dict = {'det': 0, 'rec': 0, 'cls': 0, 'all': 0}
 
         if img is None:
             self.logger.debug("no valid image provided")
-            return None, None, time_dict
+            return [], [], time_dict
 
         start = time.time()
         ori_im = img.copy()
@@ -34,7 +34,7 @@ class TextSystem(object):
             self.logger.debug("no dt_boxes found, elapsed : {}".format(elapse))
             end = time.time()
             time_dict['all'] = end - start
-            return None, None, time_dict
+            return [], [], time_dict
         else:
             self.logger.debug("dt_boxes num : {}, elapsed : {}".format(
                 len(dt_boxes), elapse))
@@ -62,7 +62,10 @@ class TextSystem(object):
         for box, rec_result in zip(dt_boxes, rec_res):
             text, score = rec_result
             if score >= drop_score:
-                filter_boxes.append(box)
+                temp = []
+                for b in box.tolist():
+                    temp.extend(b)
+                filter_boxes.append(temp)
                 filter_rec_res.append(rec_result)
         end = time.time()
         time_dict['all'] = end - start
