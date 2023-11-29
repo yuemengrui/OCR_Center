@@ -138,62 +138,62 @@ def ocr_server_test(request: Request):
     try:
         res = table_model(img=table_image)
         logger.info(f"table: {res}")
-        msg += 'table model is OK!\n'
+        msg += 'table model is OK! \n '
     except Exception as e:
         logger.error({'EXCEPTION': e})
-        msg += 'table model exception!!!\n'
+        msg += 'table model exception!!! \n '
 
     try:
         res = layout_model(img=image)
         logger.info(f"layout: {res}")
-        msg += 'layout model is OK!\n'
+        msg += 'layout model is OK! \n '
     except Exception as e:
         logger.error({'EXCEPTION': e})
-        msg += 'layout model exception!!!\n'
+        msg += 'layout model exception!!! \n '
 
     try:
         res = text_image_orientation_model.predict(image)
         logger.info(f"image_orientation: {res}")
-        msg += 'image_orientation is OK!\n'
+        msg += 'image_orientation is OK! \n '
     except Exception as e:
         logger.error({'EXCEPTION': e})
-        msg += 'image_orientation exception!!!\n'
+        msg += 'image_orientation exception!!! \n '
 
     if text_det_model['server'] is not None:
         try:
             res = text_det_model['server'](image)
             logger.info(f"det server: {res}")
-            msg += 'det server model is OK!\n'
+            msg += 'det server model is OK! \n '
         except Exception as e:
             logger.error({'EXCEPTION': e})
-            msg += 'det server model exception!!!\n'
+            msg += 'det server model exception!!! \n '
 
     if text_det_model['mobile'] is not None:
         try:
             res = text_det_model['mobile'](image)
             logger.info(f"det mobile: {res}")
-            msg += 'det mobile model is OK!\n'
+            msg += 'det mobile model is OK! \n '
         except Exception as e:
             logger.error({'EXCEPTION': e})
-            msg += 'det mobile model exception!!!\n'
+            msg += 'det mobile model exception!!! \n '
 
     if text_rec_model['server'] is not None:
         try:
             res = text_rec_model['server']([image])
             logger.info(f"rec server: {res}")
-            msg += 'rec server model is OK!\n'
+            msg += 'rec server model is OK! \n '
         except Exception as e:
             logger.error({'EXCEPTION': e})
-            msg += 'rec server model exception!!!\n'
+            msg += 'rec server model exception!!! \n '
 
     if text_rec_model['mobile'] is not None:
         try:
             res = text_rec_model['mobile']([image])
             logger.info(f"rec mobile: {res}")
-            msg += 'rec mobile model is OK!\n'
+            msg += 'rec mobile model is OK! \n '
         except Exception as e:
             logger.error({'EXCEPTION': e})
-            msg += 'rec mobile model exception!!!\n'
+            msg += 'rec mobile model exception!!! \n '
 
     try:
         _, res, _ = ocr_model(img=image,
@@ -203,10 +203,10 @@ def ocr_server_test(request: Request):
         res = [x[0] for x in res]
         text = '\n'.join(res)
         logger.info(f"ocr: {text}")
-        msg += 'ocr model is OK!\n'
+        msg += 'ocr model is OK! \n '
         msg += text
     except Exception as e:
         logger.error({'EXCEPTION': e})
-        msg += 'ocr model exception!!!\n'
+        msg += 'ocr model exception!!! \n '
 
-    return msg
+    return JSONResponse({'msg': msg})
