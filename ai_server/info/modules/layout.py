@@ -25,7 +25,7 @@ def layout_analysis(request: Request,
         return JSONResponse(ErrorResponse(errcode=RET.PARAMERR, errmsg=error_map[RET.PARAMERR]).dict(), status_code=500)
 
     try:
-        res, time_cost = layout_model(img=image)
+        res, time_cost = layout_model(img=image, score_threshold=req.score_threshold, nms_threshold=req.nms_threshold)
         return JSONResponse(LayoutResponse(data=[LayoutOne(**x) for x in res],
                                            time_cost={k: f"{v:.3f}s" for k, v in time_cost.items()}).dict())
     except Exception as e:

@@ -139,15 +139,15 @@ class PicoDetPostProcess(object):
         img_shape = np.array(img.shape[2:], dtype=np.float32)
 
         input_shape = np.array(img).astype('float32').shape[2:]
-        ori_shape = np.array((img_shape, )).astype('float32')
-        scale_factor = np.array((scale_factor, )).astype('float32')
+        ori_shape = np.array((img_shape,)).astype('float32')
+        scale_factor = np.array((scale_factor,)).astype('float32')
         return ori_shape, input_shape, scale_factor
 
-    def __call__(self, ori_img, img, preds):
+    def __call__(self, ori_img, img, preds, score_threshold=0.3, nms_threshold=0.5, **kwargs):
         scores, raw_boxes = preds['boxes'], preds['boxes_num']
         batch_size = raw_boxes[0].shape[0]
         reg_max = int(raw_boxes[0].shape[-1] / 4 - 1)
-        out_boxes_num = []
+        # out_boxes_num = []
         out_boxes_list = []
         results = []
         ori_shape, input_shape, scale_factor = self.img_info(ori_img, img)
@@ -198,7 +198,7 @@ class PicoDetPostProcess(object):
             picked_labels = []
             for class_index in range(0, confidences.shape[1]):
                 probs = confidences[:, class_index]
-                mask = probs > self.score_threshold
+                mask = probs > score_threshold
                 probs = probs[mask]
                 if probs.shape[0] == 0:
                     continue
@@ -207,14 +207,14 @@ class PicoDetPostProcess(object):
                     [subset_boxes, probs.reshape(-1, 1)], axis=1)
                 box_probs = hard_nms(
                     box_probs,
-                    iou_threshold=self.nms_threshold,
+                    iou_threshold=nms_threshold,
                     top_k=self.keep_top_k, )
                 picked_box_probs.append(box_probs)
                 picked_labels.extend([class_index] * box_probs.shape[0])
 
             if len(picked_box_probs) == 0:
                 out_boxes_list.append(np.empty((0, 4)))
-                out_boxes_num.append(0)
+                # out_boxes_num.append(0)
 
             else:
                 picked_box_probs = np.concatenate(picked_box_probs)
@@ -233,14 +233,14 @@ class PicoDetPostProcess(object):
                             np.expand_dims(
                                 np.array(picked_labels),
                                 axis=-1), np.expand_dims(
-                                    picked_box_probs[:, 4], axis=-1),
+                            picked_box_probs[:, 4], axis=-1),
                             picked_box_probs[:, :4]
                         ],
                         axis=1))
-                out_boxes_num.append(len(picked_labels))
+                # out_boxes_num.append(len(picked_labels))
 
         out_boxes_list = np.concatenate(out_boxes_list, axis=0)
-        out_boxes_num = np.asarray(out_boxes_num).astype(np.int32)
+        # out_boxes_num = np.asarray(out_boxes_num).astype(np.int32)
 
         for dt in out_boxes_list:
             clsid, bbox, score = int(dt[0]), dt[2:], dt[1]

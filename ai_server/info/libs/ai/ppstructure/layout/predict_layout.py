@@ -46,7 +46,7 @@ class LayoutPredictor(object):
         self.predictor, self.input_tensor, self.output_tensors, self.config = \
             utility.create_predictor(args, 'layout', logger)
 
-    def __call__(self, img):
+    def __call__(self, img, score_threshold=0.3, nms_threshold=0.5, **kwargs):
         ori_im = img.copy()
         data = {'image': img}
         data = transform(data, self.preprocess_op)
@@ -75,7 +75,7 @@ class LayoutPredictor(object):
                                                      out_idx + num_outs]).copy_to_cpu())
         preds = dict(boxes=np_score_list, boxes_num=np_boxes_list)
 
-        post_preds = self.postprocess_op(ori_im, img, preds)
+        post_preds = self.postprocess_op(ori_im, img, preds, score_threshold, nms_threshold)
         res = [{'box': [int(x) for x in i['bbox'].tolist()], 'label': i['label']} for i in post_preds]
         elapse = time.time() - starttime
         return res, {'layout': elapse}

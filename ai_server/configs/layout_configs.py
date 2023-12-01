@@ -7,6 +7,6 @@ LAYOUT_CONFIGS = {
     "precision": "fp32",
     "layout_model_dir": "./info/libs/ai/models/picodet_lcnet_x1_0_fgd_layout_cdla_infer",
     "layout_dict_path": "./info/libs/ai/ppstructure/layout_cdla_dict.txt",
-    "layout_score_threshold": 0.5,
+    "layout_score_threshold": 0.3,
     "layout_nms_threshold": 0.5
 }

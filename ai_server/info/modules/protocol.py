@@ -79,6 +79,8 @@ class LayoutRequest(BaseModel):
     image: Optional[str] = Field(default=None,
                                  description="图片base64编码，不包含base64头, 与url二选一，优先级image > url")
     url: Optional[AnyUrl] = Field(default=None, description="图片URL")
+    score_threshold: Optional[float] = Field(default=0.3, ge=0, le=1)
+    nms_threshold: Optional[float] = Field(default=0.5, ge=0, le=1)
 
 
 class LayoutOne(BaseModel):
