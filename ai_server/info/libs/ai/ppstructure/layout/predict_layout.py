@@ -78,4 +78,4 @@ class LayoutPredictor(object):
         post_preds = self.postprocess_op(ori_im, img, preds)
         res = [{'box': [int(x) for x in i['bbox'].tolist()], 'label': i['label']} for i in post_preds]
         elapse = time.time() - starttime
-        return res, elapse
+        return res, {'layout': elapse}

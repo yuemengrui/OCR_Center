@@ -77,8 +77,8 @@ class TableResponse(BaseModel):
 
 class LayoutRequest(BaseModel):
     image: Optional[str] = Field(default=None,
-                                 description="表格图片base64编码，不包含base64头, 与url二选一，优先级image > url")
-    url: Optional[AnyUrl] = Field(default=None, description="表格图片URL")
+                                 description="图片base64编码，不包含base64头, 与url二选一，优先级image > url")
+    url: Optional[AnyUrl] = Field(default=None, description="图片URL")
 
 
 class LayoutOne(BaseModel):
