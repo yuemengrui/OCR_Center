@@ -12,7 +12,7 @@ DET_CONFIGS = {
         "det_box_type": "quad",
         "det_db_thresh": 0.3,
         "det_db_box_thresh": 0.6,
-        "det_db_unclip_ratio": 1.5,
+        "det_db_unclip_ratio": 2.0,
         "max_batch_size": 10,
         "use_dilation": False,
         "det_db_score_mode": "fast",
