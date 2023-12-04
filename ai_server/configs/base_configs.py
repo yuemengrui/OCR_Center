@@ -18,5 +18,5 @@ REC_LOAD_MOBILE = True
 
 # API LIMIT
 API_LIMIT = {
-    "base": "240/minute"
+    "base": "600/minute"
 }
