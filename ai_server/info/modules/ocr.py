@@ -17,7 +17,7 @@ router = APIRouter()
 
 
 @router.api_route('/ai/ocr/general', methods=['POST'], response_model=OCRGeneralResponse, summary="General OCR")
-@limiter.limit(API_LIMIT['base'])
+@limiter.limit(API_LIMIT['ocr'])
 def ocr_general(request: Request,
                 req: OCRGeneralRequest,
                 ):
@@ -58,7 +58,7 @@ def ocr_general(request: Request,
 
 
 @router.api_route('/ai/ocr/idcard', methods=['POST'], response_model=IdcardResponse, summary="idcard OCR")
-@limiter.limit(API_LIMIT['base'])
+@limiter.limit(API_LIMIT['ocr'])
 def ocr_idcard(request: Request,
                req: OCRGeneralRequest,
                ):
@@ -97,7 +97,7 @@ def ocr_idcard(request: Request,
 
 @router.api_route('/ai/ocr/image_direction', methods=['POST'], response_model=ImageDirectionResponse,
                   summary="image_direction")
-@limiter.limit(API_LIMIT['base'])
+@limiter.limit(API_LIMIT['image_direction'])
 def image_direction(request: Request,
                     req: ImageDirectionRequest,
                     ):

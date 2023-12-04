@@ -13,7 +13,7 @@ router = APIRouter()
 
 
 @router.api_route('/ai/layout/analysis', methods=['POST'], response_model=LayoutResponse, summary="Layout Analysis")
-@limiter.limit(API_LIMIT['base'])
+@limiter.limit(API_LIMIT['layout'])
 def layout_analysis(request: Request,
                     req: LayoutRequest,
                     ):

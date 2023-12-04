@@ -13,12 +13,11 @@ router = APIRouter()
 
 
 @router.api_route('/ai/table/analysis', methods=['POST'], response_model=TableResponse, summary="Table Analysis")
-@limiter.limit(API_LIMIT['base'])
+@limiter.limit(API_LIMIT['table'])
 def table_ocr(request: Request,
               req: TableRequest,
               ):
-    logger.info(
-        {'url': req.url, 'redraw': req.redraw, 'table_seg_configs': req.table_seg_configs, 'with_ocr': req.with_ocr})
+    logger.info({'url': req.url, 'table_seg_configs': req.table_seg_configs, 'with_ocr': req.with_ocr})
 
     image = request_to_image(req.image, req.url)
 
