@@ -10,7 +10,7 @@ from .protocol import ErrorResponse, OCRGeneralRequest, OCRResultLine, OCRGenera
     ImageDirectionRequest, ImageDirectionResponse
 from fastapi.responses import JSONResponse
 from info.utils.idcard import idcard_parse
-from info.utils.common import request_to_image, resize_4096, cv2_to_base64
+from info.utils.common import request_to_image, resize_4096, cv2_to_base64, small_h_image_handle
 from info.utils.response_code import RET, error_map
 
 router = APIRouter()
@@ -30,6 +30,7 @@ def ocr_general(request: Request,
     if image is None:
         return JSONResponse(ErrorResponse(errcode=RET.PARAMERR, errmsg=error_map[RET.PARAMERR]).dict(), status_code=500)
 
+    image = small_h_image_handle(image)
     img, scale = resize_4096(image)
 
     det_model = (text_det_model['mobile'] if req.det_fast and text_det_model['mobile'] is not None else text_det_model[

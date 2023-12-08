@@ -50,12 +50,26 @@ def request_to_image(image: str, url: str):
     return None
 
 
-def resize_4096(img):
+def small_h_image_handle(image):
+    h, w = image.shape[:2]
+
+    if h < 32:
+        scale = 32 / h
+        image = cv2.resize(image, dsize=None, fx=scale, fy=scale)
+
+    if h < 64:
+        k = int((64 - h) / 2)
+        image = cv2.copyMakeBorder(image, k, k, 1, 1, cv2.BORDER_REPLICATE)
+
+    return image
+
+
+def resize_4096(image):
     scale = 1
-    h, w = img.shape[:2]
+    h, w = image.shape[:2]
 
     if max(h, w) > 4096:
         scale = 4096 / max(h, w)
-        img = cv2.resize(img, dsize=None, fx=scale, fy=scale)
+        img = cv2.resize(image, dsize=None, fx=scale, fy=scale)
 
-    return img, scale
+    return image, scale
