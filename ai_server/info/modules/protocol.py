@@ -19,11 +19,13 @@ class OCRGeneralRequest(BaseModel):
     rec_fast: Optional[bool] = Field(default=False, description="是否使用高速识别模型，速度快，默认false")
     text_direction: Optional[bool] = Field(default=True, description="是否检测文本行方向, 默认true")
     drop_score: Optional[float] = Field(default=0.5, ge=0, le=1, description="识别过滤阈值, 取值范围：0～1")
+    return_word_box: Optional[bool] = Field(default=False, description="是否返回单字符坐标，默认false")
 
 
 class OCRResultLine(BaseModel):
     box: List
     text: tuple
+    words: List = []
 
 
 class OCRGeneralResponse(BaseModel):

@@ -23,7 +23,7 @@ def ocr_general(request: Request,
                 ):
     logger.info(
         {'url': req.url, 'image_direction': req.image_direction, 'det_fast': req.det_fast, 'rec_fast': req.rec_fast,
-         'text_direction': req.text_direction, 'drop_score': req.drop_score})
+         'text_direction': req.text_direction, 'drop_score': req.drop_score, 'return_word_box': req.return_word_box})
 
     image = request_to_image(req.image, req.url)
 
@@ -41,14 +41,18 @@ def ocr_general(request: Request,
 
     res = []
     try:
-        boxes, rec_res, time_cost = ocr_model(img=img,
-                                              text_detector=det_model,
-                                              text_recognizer=rec_model,
-                                              cls=req.text_direction,
-                                              drop_score=req.drop_score)
+        boxes, rec_res, words, time_cost = ocr_model(img=img,
+                                                     text_detector=det_model,
+                                                     text_recognizer=rec_model,
+                                                     cls=req.text_direction,
+                                                     drop_score=req.drop_score,
+                                                     return_word_box=req.return_word_box)
 
         for i in range(len(rec_res)):
-            res.append(OCRResultLine(box=[int(x / scale) for x in boxes[i]], text=rec_res[i]))
+            if req.return_word_box:
+                res.append(OCRResultLine(box=[int(x / scale) for x in boxes[i]], text=rec_res[i], words=words[i]))
+            else:
+                res.append(OCRResultLine(box=[int(x / scale) for x in boxes[i]], text=rec_res[i]))
 
         return JSONResponse(
             OCRGeneralResponse(data=res, time_cost={k: f"{v:.3f}s" for k, v in time_cost.items()}).dict())
@@ -81,11 +85,11 @@ def ocr_idcard(request: Request,
         'server']) or text_rec_model['mobile']
 
     try:
-        _, rec_res, _ = ocr_model(img=img,
-                                  text_detector=det_model,
-                                  text_recognizer=rec_model,
-                                  cls=req.text_direction,
-                                  drop_score=req.drop_score)
+        _, rec_res, _, _ = ocr_model(img=img,
+                                     text_detector=det_model,
+                                     text_recognizer=rec_model,
+                                     cls=req.text_direction,
+                                     drop_score=req.drop_score)
 
     except Exception as e:
         logger.error({'EXCEPTION': e})
@@ -197,10 +201,10 @@ def ocr_server_test(request: Request):
             msg += 'rec mobile model exception!!! \n '
 
     try:
-        _, res, _ = ocr_model(img=image,
-                              text_detector=text_det_model['server'] or text_det_model['mobile'],
-                              text_recognizer=text_rec_model['server'] or text_rec_model['mobile'],
-                              )
+        _, res, _, _ = ocr_model(img=image,
+                                 text_detector=text_det_model['server'] or text_det_model['mobile'],
+                                 text_recognizer=text_rec_model['server'] or text_rec_model['mobile'],
+                                 )
         res = [x[0] for x in res]
         text = '\n'.join(res)
         logger.info(f"ocr: {text}")

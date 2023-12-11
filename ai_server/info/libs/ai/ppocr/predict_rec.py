@@ -51,7 +51,7 @@ class TextRecognizer(object):
         padding_im[:, :, 0:resized_w] = resized_image
         return padding_im
 
-    def __call__(self, img_list):
+    def __call__(self, img_list, return_word_box=False):
         img_num = len(img_list)
         # Calculate the aspect ratio of all text bars
         width_list = []
@@ -69,11 +69,13 @@ class TextRecognizer(object):
 
             imgC, imgH, imgW = self.rec_image_shape[:3]
             max_wh_ratio = imgW / imgH
-            # max_wh_ratio = 0
+            wh_ratio_list = []
             for ino in range(beg_img_no, end_img_no):
                 h, w = img_list[indices[ino]].shape[0:2]
                 wh_ratio = w * 1.0 / h
                 max_wh_ratio = max(max_wh_ratio, wh_ratio)
+                wh_ratio_list.append(wh_ratio)
+
             for ino in range(beg_img_no, end_img_no):
                 norm_img = self.resize_norm_img(img_list[indices[ino]],
                                                 max_wh_ratio)
@@ -93,8 +95,15 @@ class TextRecognizer(object):
                 preds = outputs
             else:
                 preds = outputs[0]
+
             self.predictor.try_shrink_memory()
-            rec_result = self.postprocess_op(preds)
+
+            rec_result = self.postprocess_op(
+                preds,
+                return_word_box=return_word_box,
+                wh_ratio_list=wh_ratio_list,
+                max_wh_ratio=max_wh_ratio)
+
             for rno in range(len(rec_result)):
                 rec_res[indices[beg_img_no + rno]] = rec_result[rno]
 
