@@ -4,7 +4,7 @@ import os
 
 FASTAPI_TITLE = 'OCR_Center'
 FASTAPI_HOST = '0.0.0.0'
-FASTAPI_PORT = 16666
+FASTAPI_PORT = 24666
 
 LOG_DIR = 'logs'
 os.makedirs(LOG_DIR, exist_ok=True)
