@@ -119,7 +119,7 @@ def image_direction(request: Request,
         return JSONResponse(ErrorResponse(errcode=RET.SERVERERR, errmsg=error_map[RET.SERVERERR]).dict(),
                             status_code=500)
 
-    base64_str = None
+    base64_str = ''
     if req.return_correction:
         cv_rotate_code = {
             '90': cv2.ROTATE_90_COUNTERCLOCKWISE,
@@ -127,8 +127,9 @@ def image_direction(request: Request,
             '270': cv2.ROTATE_90_CLOCKWISE
         }
         if angle in cv_rotate_code:
-            img = cv2.rotate(image, cv_rotate_code[angle])
-            base64_str = cv2_to_base64(img)
+            image = cv2.rotate(image, cv_rotate_code[angle])
+
+        base64_str = cv2_to_base64(image)
 
     return JSONResponse(ImageDirectionResponse(angle=angle, correction_image=base64_str).dict())
 
