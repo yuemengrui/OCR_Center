@@ -12,7 +12,7 @@ from info.utils.common import request_to_image
 router = APIRouter()
 
 
-@router.api_route('/ai/layout/analysis', methods=['POST'], response_model=LayoutResponse, summary="Layout Analysis")
+@router.api_route('/layout/analysis', methods=['POST'], response_model=LayoutResponse, summary="Layout Analysis")
 @limiter.limit(API_LIMIT['layout'])
 def layout_analysis(request: Request,
                     req: LayoutRequest,

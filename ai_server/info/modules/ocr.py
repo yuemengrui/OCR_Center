@@ -16,7 +16,7 @@ from info.utils.response_code import RET, error_map
 router = APIRouter()
 
 
-@router.api_route('/ai/ocr/general', methods=['POST'], response_model=OCRGeneralResponse, summary="General OCR")
+@router.api_route('/general', methods=['POST'], response_model=OCRGeneralResponse, summary="General OCR")
 @limiter.limit(API_LIMIT['ocr'])
 def ocr_general(request: Request,
                 req: OCRGeneralRequest,
@@ -62,7 +62,7 @@ def ocr_general(request: Request,
                             status_code=500)
 
 
-@router.api_route('/ai/ocr/idcard', methods=['POST'], response_model=IdcardResponse, summary="idcard OCR")
+@router.api_route('/idcard', methods=['POST'], response_model=IdcardResponse, summary="idcard OCR")
 @limiter.limit(API_LIMIT['ocr'])
 def ocr_idcard(request: Request,
                req: OCRGeneralRequest,
@@ -100,7 +100,7 @@ def ocr_idcard(request: Request,
     return JSONResponse(IdcardResponse(**res).dict())
 
 
-@router.api_route('/ai/ocr/image_direction', methods=['POST'], response_model=ImageDirectionResponse,
+@router.api_route('/image_direction', methods=['POST'], response_model=ImageDirectionResponse,
                   summary="image_direction")
 @limiter.limit(API_LIMIT['image_direction'])
 def image_direction(request: Request,
@@ -134,7 +134,7 @@ def image_direction(request: Request,
     return JSONResponse(ImageDirectionResponse(angle=angle, correction_image=base64_str).dict())
 
 
-@router.api_route('/ai/ocr/test', methods=['GET'])
+@router.api_route('/test', methods=['GET'])
 @limiter.limit("6/minute")
 def ocr_server_test(request: Request):
     image = cv2.imread('static/ocr.png')

@@ -12,7 +12,7 @@ from info.utils.common import request_to_image
 router = APIRouter()
 
 
-@router.api_route('/ai/table/analysis', methods=['POST'], response_model=TableResponse, summary="Table Analysis")
+@router.api_route('/table/analysis', methods=['POST'], response_model=TableResponse, summary="Table Analysis")
 @limiter.limit(API_LIMIT['table'])
 def table_ocr(request: Request,
               req: TableRequest,
