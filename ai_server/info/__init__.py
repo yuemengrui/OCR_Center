@@ -94,7 +94,7 @@ def app_registry(app):
         logger.info(f'end request "{request.method} {request.url.path}" - {cost:.3f}s')
         return response
 
-    app.mount("/static", StaticFiles(directory=f"static"), name="static")
+    app.mount("/ai/ocr/static", StaticFiles(directory=f"static"), name="static")
 
     @app.get("/ai/ocr/docs", include_in_schema=False)
     async def custom_swagger_ui_html():
