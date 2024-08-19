@@ -28,25 +28,31 @@ class TextSystem(object):
 
         start = time.time()
         ori_im = img.copy()
-        dt_boxes, elapse = text_detector(img)
-        time_dict['det'] = elapse
-
-        if dt_boxes is None:
-            self.logger.debug("no dt_boxes found, elapsed : {}".format(elapse))
-            end = time.time()
-            time_dict['all'] = end - start
-            return [], [], time_dict
+        if text_detector is None:
+            img_crop_list = [ori_im]
+            h, w = ori_im.shape[:2]
+            dt_boxes = [np.array([0, 0, w, 0, w, h, h, 0])]
         else:
-            self.logger.debug("dt_boxes num : {}, elapsed : {}".format(
-                len(dt_boxes), elapse))
-        img_crop_list = []
+            dt_boxes, elapse = text_detector(img)
+            time_dict['det'] = elapse
 
-        dt_boxes = sorted_boxes(dt_boxes)
+            if dt_boxes is None:
+                self.logger.debug("no dt_boxes found, elapsed : {}".format(elapse))
+                end = time.time()
+                time_dict['all'] = end - start
+                return [], [], time_dict
+            else:
+                self.logger.debug("dt_boxes num : {}, elapsed : {}".format(
+                    len(dt_boxes), elapse))
+            img_crop_list = []
 
-        for bno in range(len(dt_boxes)):
-            tmp_box = copy.deepcopy(dt_boxes[bno])
-            img_crop = get_rotate_crop_image(ori_im, tmp_box)
-            img_crop_list.append(img_crop)
+            dt_boxes = sorted_boxes(dt_boxes)
+
+            for bno in range(len(dt_boxes)):
+                tmp_box = copy.deepcopy(dt_boxes[bno])
+                img_crop = get_rotate_crop_image(ori_im, tmp_box)
+                img_crop_list.append(img_crop)
+
         if cls:
             img_crop_list, angle_list, elapse = self.text_classifier(
                 img_crop_list)

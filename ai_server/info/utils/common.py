@@ -70,6 +70,6 @@ def resize_4096(image):
 
     if max(h, w) > 4096:
         scale = 4096 / max(h, w)
-        img = cv2.resize(image, dsize=None, fx=scale, fy=scale)
+        image = cv2.resize(image, dsize=None, fx=scale, fy=scale)
 
     return image, scale

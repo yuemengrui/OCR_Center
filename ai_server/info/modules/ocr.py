@@ -33,8 +33,11 @@ def ocr_general(request: Request,
     image = small_h_image_handle(image)
     img, scale = resize_4096(image)
 
-    det_model = (text_det_model['mobile'] if req.det_fast and text_det_model['mobile'] is not None else text_det_model[
-        'server']) or text_det_model['mobile']
+    if req.just_rec:
+        det_model = None
+    else:
+        det_model = (text_det_model['mobile'] if req.det_fast and text_det_model['mobile'] is not None else text_det_model[
+            'server']) or text_det_model['mobile']
 
     rec_model = (text_rec_model['mobile'] if req.rec_fast and text_rec_model['mobile'] is not None else text_rec_model[
         'server']) or text_rec_model['mobile']
