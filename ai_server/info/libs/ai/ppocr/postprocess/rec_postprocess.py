@@ -91,18 +91,24 @@ class BaseRecLabelDecode(object):
         valid_col = np.where(selection == True)[0]
 
         for c_i, char in enumerate(text):
-            if '\u4e00' <= char <= '\u9fff':
-                c_state = 'cn'
-            elif bool(re.search('[a-zA-Z0-9]', char)):
-                c_state = 'en&num'
+            if "\u4e00" <= char <= "\u9fff":
+                c_state = "cn"
+            elif bool(re.search("[a-zA-Z0-9]", char)):
+                c_state = "en&num"
             else:
-                c_state = 'splitter'
+                c_state = "splitter"
 
-            if char == '.' and state == 'en&num' and c_i + 1 < len(text) and bool(
-                    re.search('[0-9]', text[c_i + 1])):  # grouping floting number
-                c_state = 'en&num'
-            if char == '-' and state == "en&num":  # grouping word with '-', such as 'state-of-the-art'
-                c_state = 'en&num'
+            if (
+                    char == "."
+                    and state == "en&num"
+                    and c_i + 1 < len(text)
+                    and bool(re.search("[0-9]", text[c_i + 1]))
+            ):  # grouping floting number
+                c_state = "en&num"
+            if (
+                    char == "-" and state == "en&num"
+            ):  # grouping word with '-', such as 'state-of-the-art'
+                c_state = "en&num"
 
             if state == None:
                 state = c_state
@@ -127,22 +133,26 @@ class BaseRecLabelDecode(object):
 
         return word_list, word_col_list, state_list
 
-    def decode(self, text_index, text_prob=None, is_remove_duplicate=False, return_word_box=False):
-        """ convert text-index into text-label. """
+    def decode(
+            self,
+            text_index,
+            text_prob=None,
+            is_remove_duplicate=False,
+            return_word_box=False,
+    ):
+        """convert text-index into text-label."""
         result_list = []
         ignored_tokens = self.get_ignored_tokens()
         batch_size = len(text_index)
         for batch_idx in range(batch_size):
             selection = np.ones(len(text_index[batch_idx]), dtype=bool)
             if is_remove_duplicate:
-                selection[1:] = text_index[batch_idx][1:] != text_index[
-                                                                 batch_idx][:-1]
+                selection[1:] = text_index[batch_idx][1:] != text_index[batch_idx][:-1]
             for ignored_token in ignored_tokens:
                 selection &= text_index[batch_idx] != ignored_token
 
             char_list = [
-                self.character[text_id]
-                for text_id in text_index[batch_idx][selection]
+                self.character[text_id] for text_id in text_index[batch_idx][selection]
             ]
             if text_prob is not None:
                 conf_list = text_prob[batch_idx][selection]
@@ -151,21 +161,29 @@ class BaseRecLabelDecode(object):
             if len(conf_list) == 0:
                 conf_list = [0]
 
-            text = ''.join(char_list)
+            text = "".join(char_list)
 
             if self.reverse:  # for arabic rec
                 text = self.pred_reverse(text)
 
             if return_word_box:
                 word_list, word_col_list, state_list = self.get_word_info(
-                    text, selection)
-                result_list.append((text, np.mean(conf_list).tolist(), [
-                    len(text_index[batch_idx]), word_list, word_col_list,
-                    state_list
-                ]))
+                    text, selection
+                )
+                result_list.append(
+                    (
+                        text,
+                        np.mean(conf_list).tolist(),
+                        [
+                            len(text_index[batch_idx]),
+                            word_list,
+                            word_col_list,
+                            state_list,
+                        ],
+                    )
+                )
             else:
                 result_list.append((text, np.mean(conf_list).tolist()))
-
         return result_list
 
     def get_ignored_tokens(self):
@@ -187,14 +205,17 @@ class CTCLabelDecode(BaseRecLabelDecode):
             preds = preds.numpy()
         preds_idx = preds.argmax(axis=2)
         preds_prob = preds.max(axis=2)
-        text = self.decode(preds_idx, preds_prob, is_remove_duplicate=True, return_word_box=return_word_box)
-
+        text = self.decode(
+            preds_idx,
+            preds_prob,
+            is_remove_duplicate=True,
+            return_word_box=return_word_box,
+        )
         if return_word_box:
             for rec_idx, rec in enumerate(text):
-                wh_ratio = kwargs['wh_ratio_list'][rec_idx]
-                max_wh_ratio = kwargs['max_wh_ratio']
+                wh_ratio = kwargs["wh_ratio_list"][rec_idx]
+                max_wh_ratio = kwargs["max_wh_ratio"]
                 rec[2][0] = rec[2][0] * (wh_ratio / max_wh_ratio)
-
         if label is None:
             return text
         label = self.decode(label)

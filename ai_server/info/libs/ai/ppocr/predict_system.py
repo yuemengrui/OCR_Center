@@ -78,6 +78,7 @@ class TextSystem(object):
                 if return_word_box:
                     temp_word_boxes = []
                     word_box_content_list, word_box_list = cal_ocr_word_box(text, box, rec_result[2])
+                    word_box_list.sort(key=lambda x: x[0][0])
                     for i in range(len(word_box_content_list)):
                         word_box = []
                         for j in word_box_list[i]:
@@ -117,7 +118,7 @@ def sorted_boxes(dt_boxes):
 
 
 def cal_ocr_word_box(rec_str, box, rec_word_info):
-    ''' Calculate the detection frame for each word based on the results of recognition and detection of ocr'''
+    """Calculate the detection frame for each word based on the results of recognition and detection of ocr"""
 
     col_num, word_list, word_col_list, state_list = rec_word_info
     box = box.tolist()
@@ -133,7 +134,7 @@ def cal_ocr_word_box(rec_str, box, rec_word_info):
     cn_width_list = []
     cn_col_list = []
     for word, word_col, state in zip(word_list, word_col_list, state_list):
-        if state == 'cn':
+        if state == "cn":
             if len(word_col) != 1:
                 char_seq_length = (word_col[-1] - word_col[0] + 1) * cell_width
                 char_width = char_seq_length / (len(word_col) - 1)
@@ -143,8 +144,12 @@ def cal_ocr_word_box(rec_str, box, rec_word_info):
         else:
             cell_x_start = bbox_x_start + int(word_col[0] * cell_width)
             cell_x_end = bbox_x_start + int((word_col[-1] + 1) * cell_width)
-            cell = ((cell_x_start, bbox_y_start), (cell_x_end, bbox_y_start),
-                    (cell_x_end, bbox_y_end), (cell_x_start, bbox_y_end))
+            cell = (
+                (cell_x_start, bbox_y_start),
+                (cell_x_end, bbox_y_start),
+                (cell_x_end, bbox_y_end),
+                (cell_x_start, bbox_y_end),
+            )
             word_box_list.append(cell)
             word_box_content_list.append("".join(word))
     if len(cn_col_list) != 0:
@@ -154,13 +159,17 @@ def cal_ocr_word_box(rec_str, box, rec_word_info):
             avg_char_width = (bbox_x_end - bbox_x_start) / len(rec_str)
         for center_idx in cn_col_list:
             center_x = (center_idx + 0.5) * cell_width
-            cell_x_start = max(int(center_x - avg_char_width / 2),
-                               0) + bbox_x_start
-            cell_x_end = min(
-                int(center_x + avg_char_width / 2), bbox_x_end -
-                                                    bbox_x_start) + bbox_x_start
-            cell = ((cell_x_start, bbox_y_start), (cell_x_end, bbox_y_start),
-                    (cell_x_end, bbox_y_end), (cell_x_start, bbox_y_end))
+            cell_x_start = max(int(center_x - avg_char_width / 2), 0) + bbox_x_start
+            cell_x_end = (
+                    min(int(center_x + avg_char_width / 2), bbox_x_end - bbox_x_start)
+                    + bbox_x_start
+            )
+            cell = (
+                (cell_x_start, bbox_y_start),
+                (cell_x_end, bbox_y_start),
+                (cell_x_end, bbox_y_end),
+                (cell_x_start, bbox_y_end),
+            )
             word_box_list.append(cell)
 
     return word_box_content_list, word_box_list
