@@ -1,5 +1,6 @@
 import platform
 import os
+import paddle
 from paddle.inference import Config
 from paddle.inference import create_predictor
 
@@ -38,13 +39,14 @@ class Predictor(object):
 
         config = Config(model_file, params_file)
 
-        if args.get("use_gpu", False):
+        if args.get("use_gpu", False) and 'gpu' in paddle.device.get_device():
             config.enable_use_gpu(args.gpu_mem, 0)
         elif args.get("use_npu", False):
             config.enable_custom_device('npu')
         elif args.get("use_xpu", False):
             config.enable_xpu()
         else:
+            print("GPU is not found, use CPU!!!")
             config.disable_gpu()
             if args.enable_mkldnn:
                 # there is no set_mkldnn_cache_capatity() on macOS

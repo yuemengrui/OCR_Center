@@ -68,7 +68,7 @@ def create_predictor(args, mode, logger):
     else:
         precision = inference.PrecisionType.Float32
 
-    if args.use_gpu:
+    if args.use_gpu and 'gpu' in paddle.device.get_device():
         gpu_id = get_infer_gpuid()
         if gpu_id is None:
             logger.warning(
@@ -76,6 +76,7 @@ def create_predictor(args, mode, logger):
             )
         config.enable_use_gpu(args.gpu_mem, args.gpu_id)
     else:
+        logger.warning("GPU is not found, use CPU!!!")
         config.disable_gpu()
         # if args.enable_mkldnn:
         #     # cache 10 different shapes for mkldnn to avoid memory leak
