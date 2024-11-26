@@ -56,6 +56,7 @@ class ImageDirectionResponse(BaseModel):
     object: str = 'Image Direction'
     angle: int
     correction_image: str = Field(default=None, description="纠正后的图片base64编码")
+    time_cost: Dict = {}
 
 
 class TableRequest(BaseModel):

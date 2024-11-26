@@ -1,6 +1,7 @@
 # *_*coding:utf-8 *_*
 # @Author : YueMengRui
 import cv2
+import time
 from mylogger import logger
 from fastapi import APIRouter, Request
 from info import limiter, text_image_orientation_model, text_det_model, text_rec_model, ocr_model, layout_model, \
@@ -21,11 +22,14 @@ router = APIRouter()
 def ocr_general(request: Request,
                 req: OCRGeneralRequest,
                 ):
+    start = time.time()
+    all_time_cost = {}
     logger.info(
         {'url': req.url, 'image_direction': req.image_direction, 'det_fast': req.det_fast, 'rec_fast': req.rec_fast,
          'text_direction': req.text_direction, 'drop_score': req.drop_score, 'return_word_box': req.return_word_box})
 
     image = request_to_image(req.image, req.url)
+    t1 = time.time()
 
     if image is None:
         return JSONResponse(ErrorResponse(errcode=RET.PARAMERR, errmsg=error_map[RET.PARAMERR]).dict(), status_code=500)
@@ -41,7 +45,7 @@ def ocr_general(request: Request,
 
     rec_model = (text_rec_model['mobile'] if req.rec_fast and text_rec_model['mobile'] is not None else text_rec_model[
         'server']) or text_rec_model['mobile']
-
+    t2 = time.time()
     res = []
     try:
         boxes, rec_res, words, time_cost = ocr_model(img=img,
@@ -57,8 +61,9 @@ def ocr_general(request: Request,
             else:
                 res.append(OCRResultLine(box=[int(x / scale) for x in boxes[i]], text=rec_res[i]))
 
+        all_time_cost.update({'getimage': t1 - start, 'preprocessing': t2 - t1, 'model': time_cost, 'all': time.time() - start})
         return JSONResponse(
-            OCRGeneralResponse(data=res, time_cost={k: f"{v:.3f}s" for k, v in time_cost.items()}).dict())
+            OCRGeneralResponse(data=res, time_cost=all_time_cost).dict())
     except Exception as e:
         logger.error({'EXCEPTION': e})
         return JSONResponse(ErrorResponse(errcode=RET.SERVERERR, errmsg=error_map[RET.SERVERERR]).dict(),
@@ -109,7 +114,10 @@ def ocr_idcard(request: Request,
 def image_direction(request: Request,
                     req: ImageDirectionRequest,
                     ):
+    start = time.time()
+    all_time_cost = {}
     image = request_to_image(req.image, req.url)
+    t1 = time.time()
 
     if image is None:
         return JSONResponse(ErrorResponse(errcode=RET.PARAMERR, errmsg=error_map[RET.PARAMERR]).dict(), status_code=500)
@@ -117,6 +125,7 @@ def image_direction(request: Request,
     try:
         cls_res = text_image_orientation_model.predict(image)
         angle = cls_res[0]['label_names'][0]
+        t2 = time.time()
     except Exception as e:
         logger.error({'EXCEPTION': e})
         return JSONResponse(ErrorResponse(errcode=RET.SERVERERR, errmsg=error_map[RET.SERVERERR]).dict(),
@@ -133,8 +142,9 @@ def image_direction(request: Request,
             image = cv2.rotate(image, cv_rotate_code[angle])
 
         base64_str = cv2_to_base64(image)
+    all_time_cost.update({'getimage': t1 - start, 'model': t2 - t1, 'all': time.time() - start})
 
-    return JSONResponse(ImageDirectionResponse(angle=angle, correction_image=base64_str).dict())
+    return JSONResponse(ImageDirectionResponse(angle=angle, correction_image=base64_str, time_cost=all_time_cost).dict())
 
 
 @router.api_route('/test', methods=['GET'])
