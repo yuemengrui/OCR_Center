@@ -18,8 +18,8 @@ REC_LOAD_MOBILE = True
 
 # API LIMIT
 API_LIMIT = {
-    "ocr": "600/minute",
-    "layout": "600/minute",
-    "table": "600/minute",
-    "image_direction": "600/minute"
+    "ocr": "1000/minute",
+    "layout": "1000/minute",
+    "table": "1000/minute",
+    "image_direction": "1000/minute"
 }

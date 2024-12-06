@@ -57,7 +57,7 @@ class TextDetector(object):
         self.predictor, self.input_tensor, self.output_tensors, self.config = create_predictor(
             args, 'det', logger)
 
-        self.preprocess_op = create_operators(pre_process_list)
+        # self.preprocess_op = create_operators(pre_process_list)
 
     def order_points_clockwise(self, pts):
         rect = np.zeros((4, 2), dtype="float32")
@@ -103,13 +103,13 @@ class TextDetector(object):
         dt_boxes = np.array(dt_boxes_new)
         return dt_boxes
 
-    def __call__(self, img):
+    def __call__(self, img, **kwargs):
         ori_im = img.copy()
         data = {'image': img}
 
         st = time.time()
 
-        data = transform(data, self.preprocess_op)
+        data = transform(data, self.preprocess_op, **kwargs)
         img, shape_list = data
         if img is None:
             return None, 0
@@ -127,7 +127,7 @@ class TextDetector(object):
         preds = {}
         preds['maps'] = outputs[0]
 
-        post_result = self.postprocess_op(preds, shape_list)
+        post_result = self.postprocess_op(preds, shape_list, **kwargs)
         dt_boxes = post_result[0]['points']
 
         if self.args.det_box_type == 'poly':

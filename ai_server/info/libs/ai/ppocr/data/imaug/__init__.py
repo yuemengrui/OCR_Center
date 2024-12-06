@@ -22,12 +22,12 @@ from .label_ops import *
 from .table_ops import *
 
 
-def transform(data, ops=None):
+def transform(data, ops=None, **kwargs):
     """ transform """
     if ops is None:
         ops = []
     for op in ops:
-        data = op(data)
+        data = op(data, **kwargs)
         if data is None:
             return None
     return data

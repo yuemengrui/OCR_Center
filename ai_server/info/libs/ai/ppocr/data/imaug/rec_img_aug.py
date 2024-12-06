@@ -37,7 +37,7 @@ class RecAug(object):
         self.bda = BaseDataAugmentation(crop_prob, reverse_prob, noise_prob,
                                         jitter_prob, blur_prob, hsv_aug_prob)
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         img = data['image']
         h, w, _ = img.shape
 
@@ -72,7 +72,7 @@ class BaseDataAugmentation(object):
         # for GaussianBlur
         self.fil = cv2.getGaussianKernel(ksize=5, sigma=1, ktype=cv2.CV_32F)
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         img = data['image']
         h, w, _ = img.shape
 
@@ -122,7 +122,7 @@ class ABINetRecAug(object):
                 p=colorjitter_p)
         ])
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         img = data['image']
         img = self.transforms(img)
         data['image'] = img
@@ -155,7 +155,7 @@ class RecConAug(object):
         data["label"] += ext_data["label"]
         return data
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         rnd_num = random.random()
         if rnd_num > self.prob:
             return data
@@ -197,7 +197,7 @@ class SVTRRecAug(object):
                 p=colorjitter_p)
         ])
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         img = data['image']
         img = self.transforms(img)
         data['image'] = img
@@ -208,7 +208,7 @@ class ClsResizeImg(object):
     def __init__(self, image_shape, **kwargs):
         self.image_shape = image_shape
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         img = data['image']
         norm_img, _ = resize_norm_img(img, self.image_shape)
         data['image'] = norm_img
@@ -229,7 +229,7 @@ class RecResizeImg(object):
         self.character_dict_path = character_dict_path
         self.padding = padding
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         img = data['image']
         if self.eval_mode or (self.infer_mode and
                               self.character_dict_path is not None):
@@ -255,7 +255,7 @@ class VLRecResizeImg(object):
         self.character_dict_path = character_dict_path
         self.padding = padding
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         img = data['image']
 
         imgC, imgH, imgW = self.image_shape
@@ -292,7 +292,7 @@ class RFLRecResizeImg(object):
         else:
             raise Exception("Unsupported interpolation type !!!")
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         img = data['image']
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         norm_img, valid_ratio = resize_norm_img(
@@ -308,7 +308,7 @@ class SRNRecResizeImg(object):
         self.num_heads = num_heads
         self.max_text_length = max_text_length
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         img = data['image']
         norm_img = resize_norm_img_srn(img, self.image_shape)
         data['image'] = norm_img
@@ -327,7 +327,7 @@ class SARRecResizeImg(object):
         self.image_shape = image_shape
         self.width_downsample_ratio = width_downsample_ratio
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         img = data['image']
         norm_img, resize_shape, pad_shape, valid_ratio = resize_norm_img_sar(
             img, self.image_shape, self.width_downsample_ratio)
@@ -341,12 +341,12 @@ class SARRecResizeImg(object):
 class PRENResizeImg(object):
     def __init__(self, image_shape, **kwargs):
         """
-        Accroding to original paper's realization, it's a hard resize method here. 
+        Accroding to original paper's realization, it's a hard resize method here.
         So maybe you should optimize it to fit for your task better.
         """
         self.dst_h, self.dst_w = image_shape
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         img = data['image']
         resized_img = cv2.resize(
             img, (self.dst_w, self.dst_h), interpolation=cv2.INTER_LINEAR)
@@ -370,7 +370,7 @@ class SPINRecResizeImg(object):
         self.std = np.array(std, dtype=np.float32)
         self.interpolation = interpolation
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         img = data['image']
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         # different interpolation type corresponding the OpenCV
@@ -416,7 +416,7 @@ class GrayRecResizeImg(object):
         self.inter_type = eval(inter_type)
         self.scale = scale
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         img = data['image']
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         image_shape = self.image_shape
@@ -457,7 +457,7 @@ class ABINetRecResizeImg(object):
     def __init__(self, image_shape, **kwargs):
         self.image_shape = image_shape
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         img = data['image']
         norm_img, valid_ratio = resize_norm_img_abinet(img, self.image_shape)
         data['image'] = norm_img
@@ -470,7 +470,7 @@ class SVTRRecResizeImg(object):
         self.image_shape = image_shape
         self.padding = padding
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         img = data['image']
 
         norm_img, valid_ratio = resize_norm_img(img, self.image_shape,
@@ -490,7 +490,7 @@ class RobustScannerRecResizeImg(object):
         self.width_downsample_ratio = width_downsample_ratio
         self.max_text_length = max_text_length
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         img = data['image']
         norm_img, resize_shape, pad_shape, valid_ratio = resize_norm_img_sar(
             img, self.image_shape, self.width_downsample_ratio)
@@ -522,7 +522,7 @@ def resize_norm_img_sar(img, image_shape, width_downsample_ratio=0.25):
         resize_w = min(imgW_max, resize_w)
     resized_image = cv2.resize(img, (resize_w, imgH))
     resized_image = resized_image.astype('float32')
-    # norm 
+    # norm
     if image_shape[0] == 1:
         resized_image = resized_image / 255
         resized_image = resized_image[np.newaxis, :]

@@ -24,6 +24,7 @@ import cv2
 import paddle
 from shapely.geometry import Polygon
 import pyclipper
+from mylogger import logger
 
 
 class DBPostProcess(object):
@@ -54,7 +55,8 @@ class DBPostProcess(object):
         self.dilation_kernel = None if not use_dilation else np.array(
             [[1, 1], [1, 1]])
 
-    def polygons_from_bitmap(self, pred, _bitmap, dest_width, dest_height):
+    def polygons_from_bitmap(self, pred, _bitmap, dest_width, dest_height, det_db_box_thresh, det_db_unclip_ratio,
+                             **kwargs):
         '''
         _bitmap: single map with shape (1, H, W),
             whose values are binarized as {0, 1}
@@ -77,31 +79,33 @@ class DBPostProcess(object):
                 continue
 
             score = self.box_score_fast(pred, points.reshape(-1, 2))
-            if self.box_thresh > score:
+            if det_db_box_thresh > score:
                 continue
 
             if points.shape[0] > 2:
-                box = self.unclip(points, self.unclip_ratio)
+                box = self.unclip(points, det_db_unclip_ratio)
                 if len(box) > 1:
                     continue
             else:
                 continue
-            box = box.reshape(-1, 2)
+
+            box = np.array(box).reshape(-1, 2)
+            if len(box) == 0:
+                continue
 
             _, sside = self.get_mini_boxes(box.reshape((-1, 1, 2)))
             if sside < self.min_size + 2:
                 continue
 
             box = np.array(box)
-            box[:, 0] = np.clip(
-                np.round(box[:, 0] / width * dest_width), 0, dest_width)
-            box[:, 1] = np.clip(
-                np.round(box[:, 1] / height * dest_height), 0, dest_height)
+            box[:, 0] = np.clip(np.round(box[:, 0] / width * dest_width), 0, dest_width)
+            box[:, 1] = np.clip(np.round(box[:, 1] / height * dest_height), 0, dest_height)
             boxes.append(box.tolist())
             scores.append(score)
         return boxes, scores
 
-    def boxes_from_bitmap(self, pred, _bitmap, dest_width, dest_height):
+    def boxes_from_bitmap(self, pred, _bitmap, dest_width, dest_height, det_db_box_thresh, det_db_unclip_ratio,
+                          **kwargs):
         '''
         _bitmap: single map with shape (1, H, W),
                 whose values are binarized as {0, 1}
@@ -131,10 +135,15 @@ class DBPostProcess(object):
                 score = self.box_score_fast(pred, points.reshape(-1, 2))
             else:
                 score = self.box_score_slow(pred, contour)
-            if self.box_thresh > score:
+            if det_db_box_thresh > score:
                 continue
 
-            box = self.unclip(points, self.unclip_ratio).reshape(-1, 1, 2)
+            box = self.unclip(points, det_db_unclip_ratio)
+            if len(box) > 1:
+                continue
+            box = np.array(box).reshape(-1, 1, 2)
+
+            # box = self.unclip(points, det_db_unclip_ratio).reshape(-1, 1, 2)
             box, sside = self.get_mini_boxes(box)
             if sside < self.min_size + 2:
                 continue
@@ -217,12 +226,23 @@ class DBPostProcess(object):
         cv2.fillPoly(mask, contour.reshape(1, -1, 2).astype("int32"), 1)
         return cv2.mean(bitmap[ymin:ymax + 1, xmin:xmax + 1], mask)[0]
 
-    def __call__(self, outs_dict, shape_list):
+    def __call__(self, outs_dict, shape_list, det_db_thresh=None, det_db_box_thresh=None, det_db_unclip_ratio=None,
+                 **kwargs):
+        if not isinstance(det_db_thresh, float):
+            det_db_thresh = self.thresh
+        if not isinstance(det_db_box_thresh, float):
+            det_db_box_thresh = self.box_thresh
+        if not isinstance(det_db_unclip_ratio, float):
+            det_db_unclip_ratio = self.unclip_ratio
+
+        logger.info({'det_db_thresh': det_db_thresh, 'det_db_box_thresh': det_db_box_thresh,
+                     'det_db_unclip_ratio': det_db_unclip_ratio})
+
         pred = outs_dict['maps']
         if isinstance(pred, paddle.Tensor):
             pred = pred.numpy()
         pred = pred[:, 0, :, :]
-        segmentation = pred > self.thresh
+        segmentation = pred > det_db_thresh
 
         boxes_batch = []
         for batch_index in range(pred.shape[0]):
@@ -234,11 +254,11 @@ class DBPostProcess(object):
             else:
                 mask = segmentation[batch_index]
             if self.box_type == 'poly':
-                boxes, scores = self.polygons_from_bitmap(pred[batch_index],
-                                                          mask, src_w, src_h)
+                boxes, scores = self.polygons_from_bitmap(pred[batch_index], mask, src_w, src_h, det_db_box_thresh,
+                                                          det_db_unclip_ratio)
             elif self.box_type == 'quad':
-                boxes, scores = self.boxes_from_bitmap(pred[batch_index], mask,
-                                                       src_w, src_h)
+                boxes, scores = self.boxes_from_bitmap(pred[batch_index], mask, src_w, src_h, det_db_box_thresh,
+                                                       det_db_unclip_ratio)
             else:
                 raise ValueError("box_type can only be one of ['quad', 'poly']")
 
@@ -269,7 +289,7 @@ class DistillationDBPostProcess(object):
             score_mode=score_mode,
             box_type=box_type)
 
-    def __call__(self, predicts, shape_list):
+    def __call__(self, predicts, shape_list, **kwargs):
         results = {}
         for k in self.model_name:
             results[k] = self.post_process(predicts[k], shape_list=shape_list)

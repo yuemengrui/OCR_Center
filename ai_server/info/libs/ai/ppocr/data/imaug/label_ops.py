@@ -28,7 +28,7 @@ class ClsLabelEncode(object):
     def __init__(self, label_list, **kwargs):
         self.label_list = label_list
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         label = data['label']
         if label not in self.label_list:
             return None
@@ -41,7 +41,7 @@ class DetLabelEncode(object):
     def __init__(self, **kwargs):
         pass
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         label = data['label']
         label = json.loads(label)
         nBox = len(label)
@@ -167,7 +167,7 @@ class CTCLabelEncode(BaseRecLabelEncode):
         super(CTCLabelEncode, self).__init__(
             max_text_length, character_dict_path, use_space_char)
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         text = data['label']
         text = self.encode(text)
         if text is None:
@@ -196,7 +196,7 @@ class E2ELabelEncodeTest(BaseRecLabelEncode):
         super(E2ELabelEncodeTest, self).__init__(
             max_text_length, character_dict_path, use_space_char)
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         import json
         padnum = len(self.dict)
         label = data['label']
@@ -233,7 +233,7 @@ class E2ELabelEncodeTrain(object):
     def __init__(self, **kwargs):
         pass
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         import json
         label = data['label']
         label = json.loads(label)
@@ -398,7 +398,7 @@ class KieLabelEncode(object):
 
         return self.convert_canonical(sorted_points_x, sorted_points_y)
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         import json
         label = data['label']
         annotations = json.loads(label)
@@ -454,7 +454,7 @@ class AttnLabelEncode(BaseRecLabelEncode):
         dict_character = [self.beg_str] + dict_character + [self.end_str]
         return dict_character
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         text = data['label']
         text = self.encode(text)
         if text is None:
@@ -506,7 +506,7 @@ class RFLLabelEncode(BaseRecLabelEncode):
             cnt_label[char_] += 1
         return np.array(cnt_label)
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         text = data['label']
         text = self.encode(text)
         if text is None:
@@ -559,7 +559,7 @@ class SEEDLabelEncode(BaseRecLabelEncode):
         ]
         return dict_character
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         text = data['label']
         text = self.encode(text)
         if text is None:
@@ -588,7 +588,7 @@ class SRNLabelEncode(BaseRecLabelEncode):
         dict_character = dict_character + [self.beg_str, self.end_str]
         return dict_character
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         text = data['label']
         text = self.encode(text)
         char_num = len(self.character)
@@ -679,7 +679,7 @@ class TableLabelEncode(AttnLabelEncode):
     def _max_text_len(self):
         return self.max_text_len + 2
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         cells = data['cells']
         structure = data['structure']
         if self.merge_no_span_structure:
@@ -805,7 +805,7 @@ class TableBoxEncode(object):
         self.in_box_format = in_box_format
         self.out_box_format = out_box_format
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         img_height, img_width = data['image'].shape[:2]
         bboxes = data['bboxes']
         if self.in_box_format != self.out_box_format:
@@ -820,7 +820,7 @@ class TableBoxEncode(object):
         data['bboxes'] = bboxes
         return data
 
-    def xyxyxyxy2xywh(self, boxes):
+    def xyxyxyxy2xywh(self, bboxes):
         new_bboxes = np.zeros([len(bboxes), 4])
         new_bboxes[:, 0] = bboxes[:, 0::2].min()  # x1
         new_bboxes[:, 1] = bboxes[:, 1::2].min()  # y1
@@ -862,7 +862,7 @@ class SARLabelEncode(BaseRecLabelEncode):
 
         return dict_character
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         text = data['label']
         text = self.encode(text)
         if text is None:
@@ -918,7 +918,7 @@ class SATRNLabelEncode(BaseRecLabelEncode):
             return None
         return text_list
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         text = data['label']
         text = self.encode(text)
         if text is None:
@@ -975,7 +975,7 @@ class PRENLabelEncode(BaseRecLabelEncode):
                     self.max_text_len - len(text_list))
         return text_list
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         text = data['label']
         encoded_text = self.encode(text)
         if encoded_text is None:
@@ -1062,7 +1062,7 @@ class VQATokenLabelEncode(object):
             new_ocr_info[idx]["linking"] = new_link
         return new_ocr_info
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         # load bbox and label info
         ocr_info = self._load_ocr_info(data)
 
@@ -1251,7 +1251,7 @@ class MultiLabelEncode(BaseRecLabelEncode):
             self.gtc_encode = eval(gtc_encode)(
                 max_text_length, character_dict_path, use_space_char, **kwargs)
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         data_ctc = copy.deepcopy(data)
         data_gtc = copy.deepcopy(data)
         data_out = dict()
@@ -1282,7 +1282,7 @@ class NRTRLabelEncode(BaseRecLabelEncode):
         super(NRTRLabelEncode, self).__init__(
             max_text_length, character_dict_path, use_space_char)
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         text = data['label']
         text = self.encode(text)
         if text is None:
@@ -1315,7 +1315,7 @@ class ViTSTRLabelEncode(BaseRecLabelEncode):
             max_text_length, character_dict_path, use_space_char)
         self.ignore_index = ignore_index
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         text = data['label']
         text = self.encode(text)
         if text is None:
@@ -1348,7 +1348,7 @@ class ABINetLabelEncode(BaseRecLabelEncode):
             max_text_length, character_dict_path, use_space_char)
         self.ignore_index = ignore_index
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         text = data['label']
         text = self.encode(text)
         if text is None:
@@ -1403,7 +1403,7 @@ class SRLabelEncode(BaseRecLabelEncode):
 
         return length, input_tensor
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         text = data['label']
         length, input_tensor = self.encode(text)
 
@@ -1433,7 +1433,7 @@ class SPINLabelEncode(AttnLabelEncode):
         dict_character = [self.beg_str] + [self.end_str] + dict_character
         return dict_character
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         text = data['label']
         text = self.encode(text)
         if text is None:
@@ -1463,7 +1463,7 @@ class VLLabelEncode(BaseRecLabelEncode):
         for i, char in enumerate(self.character):
             self.dict[char] = i
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         text = data['label']  # original string
         # generate occluded text
         len_str = len(text)
@@ -1514,7 +1514,7 @@ class CTLabelEncode(object):
     def __init__(self, **kwargs):
         pass
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         label = data['label']
 
         label = json.loads(label)
@@ -1556,7 +1556,7 @@ class CANLabelEncode(BaseRecLabelEncode):
             return None
         return text_seq_encoded
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         label = data['label']
         if isinstance(label, str):
             label = label.strip().split()

@@ -25,6 +25,7 @@ import cv2
 import numpy as np
 import math
 from PIL import Image
+from mylogger import logger
 
 
 class DecodeImage(object):
@@ -39,7 +40,7 @@ class DecodeImage(object):
         self.channel_first = channel_first
         self.ignore_orientation = ignore_orientation
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         img = data['image']
         if six.PY2:
             assert type(img) is str and len(
@@ -83,7 +84,7 @@ class NormalizeImage(object):
         self.mean = np.array(mean).reshape(shape).astype('float32')
         self.std = np.array(std).reshape(shape).astype('float32')
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         img = data['image']
         from PIL import Image
         if isinstance(img, Image.Image):
@@ -102,7 +103,7 @@ class ToCHWImage(object):
     def __init__(self, **kwargs):
         pass
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         img = data['image']
         from PIL import Image
         if isinstance(img, Image.Image):
@@ -127,7 +128,7 @@ class KeepKeys(object):
     def __init__(self, keep_keys, **kwargs):
         self.keep_keys = keep_keys
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         data_list = []
         for key in self.keep_keys:
             data_list.append(data[key])
@@ -144,7 +145,7 @@ class Pad(object):
         self.size = size
         self.size_div = size_div
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
 
         img = data['image']
         img_h, img_w = img.shape[0], img.shape[1]
@@ -184,7 +185,7 @@ class Resize(object):
         img = cv2.resize(img, (int(resize_w), int(resize_h)))
         return img, [ratio_h, ratio_w]
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         img = data['image']
         if 'polys' in data:
             text_polys = data['polys']
@@ -222,7 +223,7 @@ class DetResizeForTest(object):
             self.limit_side_len = 736
             self.limit_type = 'min'
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         img = data['image']
         src_h, src_w, _ = img.shape
         if sum([src_h, src_w]) < 64:
@@ -230,12 +231,12 @@ class DetResizeForTest(object):
 
         if self.resize_type == 0:
             # img, shape = self.resize_image_type0(img)
-            img, [ratio_h, ratio_w] = self.resize_image_type0(img)
+            img, [ratio_h, ratio_w] = self.resize_image_type0(img, **kwargs)
         elif self.resize_type == 2:
-            img, [ratio_h, ratio_w] = self.resize_image_type2(img)
+            img, [ratio_h, ratio_w] = self.resize_image_type2(img, **kwargs)
         else:
             # img, shape = self.resize_image_type1(img)
-            img, [ratio_h, ratio_w] = self.resize_image_type1(img)
+            img, [ratio_h, ratio_w] = self.resize_image_type1(img, **kwargs)
         data['image'] = img
         data['shape'] = np.array([src_h, src_w, ratio_h, ratio_w])
         return data
@@ -246,7 +247,7 @@ class DetResizeForTest(object):
         im_pad[:h, :w, :] = im
         return im_pad
 
-    def resize_image_type1(self, img):
+    def resize_image_type1(self, img, **kwargs):
         resize_h, resize_w = self.image_shape
         ori_h, ori_w = img.shape[:2]  # (h, w, c)
         if self.keep_ratio is True:
@@ -259,7 +260,7 @@ class DetResizeForTest(object):
         # return img, np.array([ori_h, ori_w])
         return img, [ratio_h, ratio_w]
 
-    def resize_image_type0(self, img):
+    def resize_image_type0(self, img, det_limit_side_len=None, **kwargs):
         """
         resize image to a size multiple of 32 which is required by the network
         args:
@@ -267,28 +268,32 @@ class DetResizeForTest(object):
         return(tuple):
             img, (ratio_h, ratio_w)
         """
-        limit_side_len = self.limit_side_len
+        if not isinstance(det_limit_side_len, int):
+            det_limit_side_len = self.limit_side_len
+
+        logger.info({'det_limit_side_len': det_limit_side_len})
+
         h, w, c = img.shape
 
         # limit the max side
         if self.limit_type == 'max':
-            if max(h, w) > limit_side_len:
+            if max(h, w) > det_limit_side_len:
                 if h > w:
-                    ratio = float(limit_side_len) / h
+                    ratio = float(det_limit_side_len) / h
                 else:
-                    ratio = float(limit_side_len) / w
+                    ratio = float(det_limit_side_len) / w
             else:
                 ratio = 1.
         elif self.limit_type == 'min':
-            if min(h, w) < limit_side_len:
+            if min(h, w) < det_limit_side_len:
                 if h < w:
-                    ratio = float(limit_side_len) / h
+                    ratio = float(det_limit_side_len) / h
                 else:
-                    ratio = float(limit_side_len) / w
+                    ratio = float(det_limit_side_len) / w
             else:
                 ratio = 1.
         elif self.limit_type == 'resize_long':
-            ratio = float(limit_side_len) / max(h, w)
+            ratio = float(det_limit_side_len) / max(h, w)
         else:
             raise Exception('not support limit type, image ')
         resize_h = int(h * ratio)
@@ -308,7 +313,7 @@ class DetResizeForTest(object):
         ratio_w = resize_w / float(w)
         return img, [ratio_h, ratio_w]
 
-    def resize_image_type2(self, img):
+    def resize_image_type2(self, img, **kwargs):
         h, w, _ = img.shape
 
         resize_w = w
@@ -337,7 +342,7 @@ class ResizeNormalize(object):
         self.size = size
         self.interpolation = interpolation
 
-    def __call__(self, img):
+    def __call__(self, img, **kwargs):
         img = img.resize(self.size, self.interpolation)
         img_numpy = np.array(img).astype("float32")
         img_numpy = img_numpy.transpose((2, 0, 1)) / 255
@@ -354,7 +359,7 @@ class GrayImageChannelFormat(object):
     def __init__(self, inverse=False, **kwargs):
         self.inverse = inverse
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         img = data['image']
         img_single_channel = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         img_expanded = np.expand_dims(img_single_channel, 0)

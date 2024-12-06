@@ -43,7 +43,7 @@ class MakeShrinkMap(object):
             self.shrink_ratio = self.shrink_ratio + 0.2 * kwargs[
                 'epoch'] / float(kwargs['total_epoch'])
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         image = data['image']
         text_polys = data['polys']
         ignore_tags = data['ignore_tags']

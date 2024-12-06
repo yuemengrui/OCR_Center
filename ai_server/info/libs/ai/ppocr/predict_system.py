@@ -19,7 +19,7 @@ class TextSystem(object):
         self.logger = logger
         self.text_classifier = text_classifier
 
-    def __call__(self, img, text_detector, text_recognizer, cls=True, drop_score=0.5, return_word_box=False, **kwargs):
+    def __call__(self, img, text_detector, text_recognizer, cls=True, rec_drop_score=0.5, return_word_box=False, **kwargs):
         time_dict = {'det': 0, 'rec': 0, 'cls': 0, 'all': 0}
 
         if img is None:
@@ -33,7 +33,7 @@ class TextSystem(object):
             h, w = ori_im.shape[:2]
             dt_boxes = [np.array([0, 0, w, 0, w, h, h, 0])]
         else:
-            dt_boxes, elapse = text_detector(img)
+            dt_boxes, elapse = text_detector(img, **kwargs)
             time_dict['det'] = elapse
 
             if dt_boxes is None:
@@ -55,12 +55,12 @@ class TextSystem(object):
 
         if cls:
             img_crop_list, angle_list, elapse = self.text_classifier(
-                img_crop_list)
+                img_crop_list, **kwargs)
             time_dict['cls'] = elapse
             self.logger.debug("cls num  : {}, elapsed : {}".format(
                 len(img_crop_list), elapse))
 
-        rec_res, elapse = text_recognizer(img_crop_list, return_word_box=return_word_box)
+        rec_res, elapse = text_recognizer(img_crop_list, return_word_box=return_word_box, **kwargs)
         time_dict['rec'] = elapse
         self.logger.debug("rec_res num  : {}, elapsed : {}".format(
             len(rec_res), elapse))
@@ -68,7 +68,7 @@ class TextSystem(object):
         filter_boxes, filter_rec_res, words = [], [], []
         for box, rec_result in zip(dt_boxes, rec_res):
             text, score = rec_result[0], rec_result[1]
-            if score >= drop_score:
+            if score >= rec_drop_score:
                 temp = []
                 for b in box.tolist():
                     temp.extend(b)

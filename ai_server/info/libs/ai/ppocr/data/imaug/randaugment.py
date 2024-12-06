@@ -106,7 +106,7 @@ class RawRandAugment(object):
             "invert": lambda img, magnitude: ImageOps.invert(img)
         }
 
-    def __call__(self, img):
+    def __call__(self, img, **kwargs):
         avaiable_op_names = list(self.level_map.keys())
         for layer_num in range(self.num_layers):
             op_name = np.random.choice(avaiable_op_names)
@@ -124,7 +124,7 @@ class RandAugment(RawRandAugment):
         else:
             super().__init__(*args, **kwargs)
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         if np.random.rand() > self.prob:
             return data
         img = data['image']

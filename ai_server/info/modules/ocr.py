@@ -26,7 +26,10 @@ def ocr_general(request: Request,
     all_time_cost = {}
     logger.info(
         {'url': req.url, 'image_direction': req.image_direction, 'det_fast': req.det_fast, 'rec_fast': req.rec_fast,
-         'text_direction': req.text_direction, 'drop_score': req.drop_score, 'return_word_box': req.return_word_box})
+         'text_direction': req.text_direction, 'rec_drop_score': req.rec_drop_score, 'return_word_box': req.return_word_box,
+         'det_limit_side_len': req.det_limit_side_len, 'det_db_thresh': req.det_db_thresh,
+         'det_db_box_thresh': req.det_db_box_thresh, 'det_db_unclip_ratio': req.det_db_unclip_ratio,
+         'cls_thresh': req.cls_thresh})
 
     image = request_to_image(req.image, req.url)
     t1 = time.time()
@@ -52,8 +55,13 @@ def ocr_general(request: Request,
                                                      text_detector=det_model,
                                                      text_recognizer=rec_model,
                                                      cls=req.text_direction,
-                                                     drop_score=req.drop_score,
-                                                     return_word_box=req.return_word_box)
+                                                     cls_thresh=req.cls_thresh,
+                                                     rec_drop_score=req.rec_drop_score,
+                                                     return_word_box=req.return_word_box,
+                                                     det_limit_side_len=req.det_limit_side_len,
+                                                     det_db_thresh=req.det_db_thresh,
+                                                     det_db_box_thresh=req.det_db_box_thresh,
+                                                     det_db_unclip_ratio=req.det_db_unclip_ratio)
 
         for i in range(len(rec_res)):
             if req.return_word_box:

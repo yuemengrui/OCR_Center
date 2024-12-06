@@ -75,7 +75,7 @@ class IaaAugment():
             }]
         self.augmenter = AugmenterBuilder().build(augmenter_args)
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         image = data['image']
         shape = image.shape
 

@@ -33,7 +33,7 @@ class SSLRotateResize(object):
         self.select_all = select_all
         self.mode = mode
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         img = data["image"]
 
         data["image_r90"] = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)

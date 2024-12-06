@@ -27,7 +27,6 @@ import cv2
 np.seterr(divide='ignore', invalid='ignore')
 import pyclipper
 from shapely.geometry import Polygon
-import sys
 import warnings
 
 warnings.simplefilter("ignore")
@@ -49,7 +48,7 @@ class MakeBorderMap(object):
             self.shrink_ratio = self.shrink_ratio + 0.2 * kwargs[
                 'epoch'] / float(kwargs['total_epoch'])
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
 
         img = data['image']
         text_polys = data['polys']

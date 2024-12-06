@@ -18,9 +18,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-
-import sys
-import six
 import cv2
 import numpy as np
 
@@ -153,7 +150,7 @@ class GenTableMask(object):
             bottom_new = bottom
         return [left_new, top_new, right_new, bottom_new]
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         img = data['image']
         cells = data['cells']
         height, width = img.shape[0:2]
@@ -195,7 +192,7 @@ class ResizeTableImage(object):
         self.resize_bboxes = resize_bboxes
         self.infer_mode = infer_mode
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         img = data['image']
         height, width = img.shape[0:2]
         ratio = self.max_len / (max(height, width) * 1.0)
@@ -216,7 +213,7 @@ class PaddingTableImage(object):
         super(PaddingTableImage, self).__init__()
         self.size = size
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         img = data['image']
         pad_h, pad_w = self.size
         padding_img = np.zeros((pad_h, pad_w, 3), dtype=np.float32)

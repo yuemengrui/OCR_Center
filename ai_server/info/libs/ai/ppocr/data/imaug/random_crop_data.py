@@ -136,7 +136,7 @@ class EastRandomCropData(object):
         self.min_crop_side_ratio = min_crop_side_ratio
         self.keep_ratio = keep_ratio
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         img = data['image']
         text_polys = data['polys']
         ignore_tags = data['ignore_tags']
@@ -187,7 +187,7 @@ class RandomCropImgMask(object):
         self.crop_keys = crop_keys
         self.p = p
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         image = data['image']
 
         h, w = image.shape[0:2]

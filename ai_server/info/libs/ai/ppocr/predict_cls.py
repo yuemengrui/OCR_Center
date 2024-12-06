@@ -13,6 +13,7 @@ import numpy as np
 import math
 import time
 import utility
+from mylogger import logger
 from .postprocess import build_post_process
 
 
@@ -51,7 +52,11 @@ class TextClassifier(object):
         padding_im[:, :, 0:resized_w] = resized_image
         return padding_im
 
-    def __call__(self, img_list):
+    def __call__(self, img_list, cls_thresh=None, **kwargs):
+        if not isinstance(cls_thresh, float):
+            cls_thresh = self.cls_thresh
+
+        logger.info({'cls_thresh': cls_thresh})
         img_list = copy.deepcopy(img_list)
         img_num = len(img_list)
         # Calculate the aspect ratio of all text bars
@@ -90,7 +95,7 @@ class TextClassifier(object):
             for rno in range(len(cls_result)):
                 label, score = cls_result[rno]
                 cls_res[indices[beg_img_no + rno]] = [label, score]
-                if '180' in label and score > self.cls_thresh:
+                if '180' in label and score > cls_thresh:
                     img_list[indices[beg_img_no + rno]] = cv2.rotate(
                         img_list[indices[beg_img_no + rno]], 1)
         return img_list, cls_res, elapse

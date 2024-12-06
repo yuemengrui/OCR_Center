@@ -31,7 +31,7 @@ class CopyPaste(object):
         augmenter_args = [{'type': 'Resize', 'args': {'size': [0.5, 3]}}]
         self.aug = IaaAugment(augmenter_args)
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
         point_num = data['polys'].shape[1]
         src_img = data['image']
         src_polys = data['polys'].tolist()

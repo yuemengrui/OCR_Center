@@ -31,7 +31,7 @@ class MakePseGt(object):
         self.min_shrink_ratio = min_shrink_ratio
         self.size = size
 
-    def __call__(self, data):
+    def __call__(self, data, **kwargs):
 
         image = data['image']
         text_polys = data['polys']
