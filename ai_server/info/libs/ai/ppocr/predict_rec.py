@@ -20,6 +20,7 @@ class TextRecognizer(object):
         self.rec_image_shape = [int(v) for v in args.rec_image_shape.split(",")]
         self.rec_batch_num = args.rec_batch_num
         self.rec_algorithm = args.rec_algorithm
+        self.use_mindir = args.use_mindir
         postprocess_params = {
             'name': 'CTCLabelDecode',
             "character_dict_path": args.rec_char_dict_path,
@@ -84,19 +85,27 @@ class TextRecognizer(object):
             norm_img_batch = np.concatenate(norm_img_batch)
             norm_img_batch = norm_img_batch.copy()
 
-            self.input_tensor.copy_from_cpu(norm_img_batch)
-            self.predictor.run()
-            outputs = []
-            for output_tensor in self.output_tensors:
-                output = output_tensor.copy_to_cpu()
-                outputs.append(output)
-
-            if len(outputs) != 1:
-                preds = outputs
-            else:
+            if self.use_mindir:
+                self.predictor.resize(self.input_tensor, [norm_img_batch.shape])
+                inputs = self.predictor.get_inputs()
+                inputs[0].set_data_from_numpy(norm_img_batch)
+                outputs = self.predictor.predict(inputs)
+                outputs = [o.get_data_to_numpy() for o in outputs]
                 preds = outputs[0]
+            else:
+                self.input_tensor.copy_from_cpu(norm_img_batch)
+                self.predictor.run()
+                outputs = []
+                for output_tensor in self.output_tensors:
+                    output = output_tensor.copy_to_cpu()
+                    outputs.append(output)
 
-            self.predictor.try_shrink_memory()
+                if len(outputs) != 1:
+                    preds = outputs
+                else:
+                    preds = outputs[0]
+
+                self.predictor.try_shrink_memory()
 
             rec_result = self.postprocess_op(
                 preds,

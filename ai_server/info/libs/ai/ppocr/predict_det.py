@@ -18,6 +18,7 @@ class TextDetector(object):
     def __init__(self, args, logger=None):
         self.args = args
         self.det_algorithm = args.det_algorithm
+        self.use_mindir = args.use_mindir
         pre_process_list = [{
             'DetResizeForTest': {
                 'limit_side_len': args.det_limit_side_len,
@@ -117,12 +118,22 @@ class TextDetector(object):
         shape_list = np.expand_dims(shape_list, axis=0)
         img = img.copy()
 
-        self.input_tensor.copy_from_cpu(img)
-        self.predictor.run()
-        outputs = []
-        for output_tensor in self.output_tensors:
-            output = output_tensor.copy_to_cpu()
-            outputs.append(output)
+        if self.use_mindir:
+            self.predictor.resize(self.input_tensor, [img.shape])  # dynamic shape
+            inputs = self.predictor.get_inputs()
+            inputs[0].set_data_from_numpy(img)
+            # execute inference
+            outputs = self.predictor.predict(inputs)
+            outputs = [o.get_data_to_numpy() for o in outputs]
+        else:
+            self.input_tensor.copy_from_cpu(img)
+            self.predictor.run()
+            outputs = []
+            for output_tensor in self.output_tensors:
+                output = output_tensor.copy_to_cpu()
+                outputs.append(output)
+
+            self.predictor.try_shrink_memory()
 
         preds = {}
         preds['maps'] = outputs[0]

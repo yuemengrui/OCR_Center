@@ -22,6 +22,7 @@ class TextClassifier(object):
         self.cls_image_shape = [int(v) for v in args.cls_image_shape.split(",")]
         self.cls_batch_num = args.cls_batch_num
         self.cls_thresh = args.cls_thresh
+        self.use_mindir = args.use_mindir
         postprocess_params = {
             'name': 'ClsPostProcess',
             "label_list": args.label_list,
@@ -86,10 +87,19 @@ class TextClassifier(object):
             norm_img_batch = np.concatenate(norm_img_batch)
             norm_img_batch = norm_img_batch.copy()
 
-            self.input_tensor.copy_from_cpu(norm_img_batch)
-            self.predictor.run()
-            prob_out = self.output_tensors[0].copy_to_cpu()
-            self.predictor.try_shrink_memory()
+            if self.use_mindir:
+                self.predictor.resize(self.input_tensor, [norm_img_batch.shape])
+                inputs = self.predictor.get_inputs()
+                inputs[0].set_data_from_numpy(norm_img_batch)
+                outputs = self.predictor.predict(inputs)
+                outputs = [o.get_data_to_numpy() for o in outputs]
+                prob_out = outputs[0]
+            else:
+                self.input_tensor.copy_from_cpu(norm_img_batch)
+                self.predictor.run()
+                prob_out = self.output_tensors[0].copy_to_cpu()
+                self.predictor.try_shrink_memory()
+
             cls_result = self.postprocess_op(prob_out)
             elapse += time.time() - starttime
             for rno in range(len(cls_result)):

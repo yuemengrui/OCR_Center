@@ -2,6 +2,7 @@
 # @Author : YueMengRui
 CLS_CONFIGS = {
     "use_gpu": True,
+    "use_mindir": False,
     "gpu_mem": 256,
     "gpu_id": 0,
     "precision": "fp32",
