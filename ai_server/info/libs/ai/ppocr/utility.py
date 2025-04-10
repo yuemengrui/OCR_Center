@@ -44,6 +44,7 @@ def create_predictor(args, mode, logger):
         # context.ascend.provider = "ge"
         model = mslite.Model()
         model.build_from_file(model_file_path, mslite.ModelType.MINDIR, context)
+        logger.info(f"model load in mindir")
         return model, model.get_inputs(), None, None
 
     else:
